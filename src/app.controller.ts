@@ -21,16 +21,23 @@ export class AppController {
   }
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file, @Body() metadata) {
+  async uploadFile(@UploadedFile() file, @Body() metadata) {
+    console.log(metadata);
     const ecmFile: ECMFile = {
       id: 'zou' + Date.now(),
-      docType: DocType.INVOICE,
-      fileContent: file,
+      docType: DocType.BL,
+      fileContent: file.buffer,
       metadata,
-      fileLink: { bucket: 'create-by-api', objectKey: 'file.pdf' },
+      fileLink: {
+        bucket: 'create-by-api',
+        objectKey: 'file.pdf',
+        originalName: file.originalName,
+        mimeType: file.mimetype,
+      },
       revision: 1,
       createdAt: new Date().toISOString(),
     };
-    upload(ecmFile);
+    await upload(ecmFile);
+    return this.appService.getHello();
   }
 }

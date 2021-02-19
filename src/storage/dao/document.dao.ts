@@ -48,6 +48,6 @@ export async function save(eFile: ECMFile): Promise<ECMFile> {
   if (respObj.VersionId) {
     eFile.fileLink.versionId = respObj.VersionId;
   }
-  Logger.debug('Object:'/*+ JSON.stringify(respObj));
+  Logger.debug('Object:' /*+ JSON.stringify(respObj)*/);
   return eFile;
 }

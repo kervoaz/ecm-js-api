@@ -3,7 +3,13 @@ export interface ECMFile {
   docType: DocType;
   fileContent: Buffer;
   metadata: { [key: string]: string };
-  fileLink: { bucket: string; objectKey: string; versionId?: string };
+  fileLink: {
+    bucket: string;
+    objectKey: string;
+    versionId?: string;
+    originalName: string;
+    mimeType: string;
+  };
   revision: number;
   createdAt?: string;
 }
