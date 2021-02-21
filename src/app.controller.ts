@@ -1,43 +1,33 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AppService } from './app.service';
-import { upload } from './storage/storage.service';
-import { DocType, ECMFile } from './storage/storage.model';
+import { generateUID, StorageService } from './storage/storage.service';
+import { Document, ECMDocument } from './storage/storage.model';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  constructor(private readonly storageService: StorageService) {
   }
+
+  @Get('documents/:id')
+  async getDocumentById(@Param('id') id, @Query() queryString): Promise<ECMDocument> {
+    console.log(JSON.stringify(id));
+    console.log(JSON.stringify(queryString));
+    return await this.storageService.getDocumentById(id);
+  }
+
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file, @Body() metadata) {
-    console.log(metadata);
-    const ecmFile: ECMFile = {
-      id: 'zou' + Date.now(),
-      docType: DocType.BL,
-      fileContent: file.buffer,
+    const doc: Document = {
+      id: generateUID('zou'),
       metadata,
-      fileLink: {
-        bucket: 'create-by-api',
-        objectKey: 'file.pdf',
-        originalName: file.originalName,
+      fileContent: {
+        content: file.buffer,
         mimeType: file.mimetype,
+        originalName: file.originalname,
       },
-      revision: 1,
       createdAt: new Date().toISOString(),
     };
-    await upload(ecmFile);
-    return this.appService.getHello();
+    return await this.storageService.upload(doc);
   }
 }

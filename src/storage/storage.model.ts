@@ -1,28 +1,42 @@
-export interface ECMFile {
+export interface Document {
   id: string;
-  docType: DocType;
-  fileContent: Buffer;
-  metadata: { [key: string]: string };
-  fileLink: {
-    bucket: string;
-    objectKey: string;
-    versionId?: string;
-    originalName: string;
-    mimeType: string;
-  };
-  revision: number;
-  createdAt?: string;
+  type?: DocumentType;
+  revision?: number;
+  metadata?: Metadata;
+  createdAt: string;
+  updatedAt?: string;
+  fileContent?: { content: Buffer; originalName: string; mimeType: string };
 }
 
-export enum DocType {
-  BL = 'BL',
-  INVOICE = 'INVOICE',
+export interface Metadata {
+  [key: string]: string;
 }
 
-export function isVersionnable(docType: DocType) {
-  if (docType === DocType.BL) {
-    return true;
-  } else {
-    return false;
-  }
+export interface StorageInformation {
+  bucket: string;
+  objectKey: string;
+  versionId?: string;
+}
+
+export interface ECMDocument extends Document {
+  contentStorage: StorageInformation;
+}
+
+export interface DocumentType {
+  type: string;
+  allowRevision: boolean;
+}
+
+export interface BL extends DocumentType {
+  type: 'BL';
+  allowRevision: true;
+}
+
+export interface Invoice extends DocumentType {
+  type: 'INVOICE';
+  allowRevision: false;
+}
+
+export function allowRevision(document: Document) {
+  return document.type.allowRevision;
 }
