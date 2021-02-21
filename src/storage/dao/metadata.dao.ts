@@ -29,11 +29,13 @@ function toDTO(eFile: ECMFile): DocumentDTO {
   };
 }
 
-const TABLE_NAME = process.env.DOCUMENTS_TABLE_NAME;
+const TABLE_NAME = 'ecm-dev-documents'; //process.env.DOCUMENTS_TABLE_NAME; //ecm-dev-documents
 
 export async function save(eFile: ECMFile) {
   const previousStoredDocument = await getLastRevision(eFile.id);
-  eFile.revision = previousStoredDocument.revision + 1;
+  if (previousStoredDocument) {
+    eFile.revision = previousStoredDocument.revision + 1;
+  }
   const documentDTO: DocumentDTO = toDTO(eFile);
   if (documentDTO === undefined) {
     throw new Error(`[ERR_DOC_SAVE]:documentDTO cannot be empty`);
