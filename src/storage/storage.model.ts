@@ -5,7 +5,12 @@ export interface Document {
   metadata?: Metadata;
   createdAt: string;
   updatedAt?: string;
-  fileContent?: { content: Buffer; originalName: string; mimeType: string };
+  fileContent?: {
+    content: Buffer;
+    originalName: string;
+    mimeType: string;
+    compressed: boolean;
+  };
 }
 
 export interface Metadata {
