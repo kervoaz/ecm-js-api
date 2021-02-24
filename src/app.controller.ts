@@ -4,6 +4,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   Param,
   Post,
   Query,
@@ -60,6 +61,7 @@ export class AppController {
   @Post('documents/:id')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@Param('id') id, @UploadedFile() file, @Body() metadata) {
+    Logger.debug(`test env ${process.env.TEST}`);
     try {
       const doc: Document = {
         id,
