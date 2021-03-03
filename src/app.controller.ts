@@ -14,13 +14,24 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage/storage.service';
-import { Document, ECMDocument, Metadata } from './storage/storage.model';
+import {
+  Document,
+  ECMDocument,
+  ECMiDocument,
+  Metadata,
+} from './storage/storage.model';
 import { Response } from 'express';
 import { unzip, zip } from './technical/Utils';
+import { ParserService } from './integrity/parser.service';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly storageService: StorageService) {}
+  constructor(
+    private readonly storageService: StorageService,
+    private readonly parserService: ParserService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get('documents/:id/content')
   async getDocumentContentById(
@@ -56,6 +67,22 @@ export class AppController {
     return allAsView(
       await this.storageService.getDocumentsById(id, queryString),
     );
+  }
+  @Post('document/parse')
+  @UseInterceptors(FileInterceptor('file'))
+  async parseFile(@UploadedFile() file) {
+    try {
+      const document = new ECMiDocument('zou', {
+        content: file.buffer,
+        mimeType: file.mimetype,
+        originalName: file.originalname,
+        compressed: false,
+      });
+      const res = await this.appService.main(document);
+    //  Logger.debug('res' + res.toString());
+    } catch (e) {
+      Logger.error(e.message);
+    }
   }
 
   @Post('documents/:id')

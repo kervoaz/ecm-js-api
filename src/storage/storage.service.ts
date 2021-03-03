@@ -4,19 +4,20 @@ import { Document, DocumentType, ECMDocument, Metadata } from './storage.model';
 import { Injectable } from '@nestjs/common';
 import { Readable } from 'stream';
 import { AnalyzerService } from '../integrity/analyzer.service';
-import { ValidationService } from 'src/integrity/validation.service';
 import { MetadataRepository } from './dao/metadata.dao';
+import { ValidationService } from '../integrity/validation.service';
 
 @Injectable()
 export class StorageService {
   constructor(
     private readonly analyzerService: AnalyzerService,
     private readonly integrityService: ValidationService,
-    private readonly metadataRepository: MetadataRepository  ) {}
+    private readonly metadataRepository: MetadataRepository,
+  ) {}
 
   async upload(inFile: Document) {
-    await this.integrityService.validate({productId:1,productName:'name'})
-    await this.analyzerService.analyzePdf(inFile);
+    await this.integrityService.validate({ productId: 1, productName: 'name' });
+    // await this.analyzerService.analyze(inFile);
     inFile.type = getDocumentType(inFile);
     let ecmFile: ECMDocument = await DocumentRepository.save(inFile);
     ecmFile = await this.metadataRepository.save(ecmFile);
@@ -44,7 +45,10 @@ export class StorageService {
   ): Promise<ECMDocument> {
     let ecmFile;
     if (filters['revision']) {
-      ecmFile = await this.metadataRepository.get(id, parseInt(filters['revision']));
+      ecmFile = await this.metadataRepository.get(
+        id,
+        parseInt(filters['revision']),
+      );
     } else {
       ecmFile = await this.metadataRepository.getLastRevision(id);
     }

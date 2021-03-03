@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ECM as Lambda.
+
+Resources:
+  ECMNestJSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/lambda-entry-point.handler
+      Runtime: nodejs12.x
+      CodeUri: deploy/nest-lambda.zip
+      MemorySize: 1512
+      Timeout: 60
+      Layers:
+        - arn:aws:lambda:eu-west-1:181929501415:layer:NestLayer:1
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+      Policies:
+        - Statement:
+            - Effect: "Allow"
+              Action:
+                - 'lambda:GetLayerVersion'
+              Resource:
+                - 'arn:aws:lambda:*:1234567890:layer:*:*'
+            - Effect: "Allow"
+              Action:
+                - 'logs:CreateLogGroup'
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource:
+                - '*'
+Outputs:
+  LambdaECMNestApi:
+    Description: URL for application
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/documents'
+    Export:
+      Name: LambdaNestApi

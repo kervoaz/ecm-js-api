@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ECM as Lambda.
+
+Resources:
+  ECMNestJSFLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - nodejs12.x
+      ContentUri: /dist
+      Description: nestlayer
+      LayerName: NestLayer
+
+#Outputs:
+#  LambdaECMNestApi:
+#    Description: URL for application
+#    Value: !Sub '${NestLayer}'
+#    Export:
+#      Name: LambdaNestLayer
