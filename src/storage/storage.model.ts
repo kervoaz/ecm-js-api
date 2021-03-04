@@ -9,7 +9,7 @@ export class ECMiDocument {
   storageInformation?: StorageInformation;
   documentAnalyzis: { parsed: string };
   constructor(
-    private readonly id: string,
+    readonly id: string,
     readonly fileContent: {
       content: Buffer;
       originalName: string;
@@ -26,26 +26,27 @@ export class ECMiDocument {
   asJson() {
     this.documentAnalyzis.parsed = xml2Json(this.documentAnalyzis.parsed);
   }
+  addMetadata(metaToAdd: Metadata) {
+    this.metadata = new Map([...this.metadata, ...metaToAdd]);
+  }
 }
 
-export interface Document {
-  id: string;
-  type?: DocumentType;
-  revision?: number;
-  metadata?: Metadata;
-  createdAt: string;
-  updatedAt?: string;
-  fileContent?: {
-    content: Buffer;
-    originalName: string;
-    mimeType: string;
-    compressed: boolean;
-  };
-}
+// export interface Document {
+//   id: string;
+//   type?: DocumentType;
+//   revision?: number;
+//   metadata?: Metadata;
+//   createdAt: string;
+//   updatedAt?: string;
+//   fileContent?: {
+//     content: Buffer;
+//     originalName: string;
+//     mimeType: string;
+//     compressed: boolean;
+//   };
+// }
 
-export interface Metadata {
-  [key: string]: string;
-}
+export type Metadata = Map<string, string>;
 
 export interface StorageInformation {
   bucket: string;
@@ -53,7 +54,7 @@ export interface StorageInformation {
   versionId?: string;
 }
 
-export interface ECMDocument extends Document {
+export interface ECMDocument extends ECMiDocument {
   contentStorage: StorageInformation;
 }
 
@@ -72,6 +73,6 @@ export interface Invoice extends DocumentType {
   allowRevision: false;
 }
 
-export function allowRevision(document: Document) {
+export function allowRevision(document: ECMiDocument) {
   return document.type.allowRevision;
 }

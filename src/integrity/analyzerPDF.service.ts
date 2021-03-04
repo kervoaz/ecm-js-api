@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
-import { Document, ECMiDocument } from '../storage/storage.model';
+import { Document, ECMiDocument, Metadata } from '../storage/storage.model';
 import { ParserService } from './parser.service';
 import { replacer } from '../technical/Utils';
 
@@ -25,17 +25,18 @@ export class AnalyzerPDFService {
     document.asJson();
     const bookmarks: { li: Array<string> } =
       document.documentAnalyzis.parsed['html']['body']['ul'];
-    // if (!(bookmarks instanceof Array)) {
-    //   bookmarks = [bookmarks];
-    // }
+    if (bookmarks.li.length > 1) {
+      throw new Error(`Split on bookmark/outline not yet implemented`);
+    }
     for (const bookmark of bookmarks.li) {
       const meta = parseLaraPdfBookmark(bookmark);
-      Logger.debug((JSON.stringify(meta,replacer)));
+      document.metadata = meta;
+      Logger.debug(JSON.stringify(meta, replacer));
     }
   }
 }
 
-function parseLaraPdfBookmark(laraBookmark: string): Map<string, string> {
+function parseLaraPdfBookmark(laraBookmark: string): Metadata {
   const metaMap = new Map<string, string>();
   if (!laraBookmark) {
     throw new Error(`Lara document MUST have bookmarks`);

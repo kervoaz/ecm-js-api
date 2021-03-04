@@ -73,7 +73,9 @@ export class MetadataRepository {
   }
 
   async getLastRevision(id: string): Promise<ECMDocument> {
-    const sorted = (await this.list(id)).sort((a, b) => a.revision - b.revision);
+    const sorted = (await this.list(id)).sort(
+      (a, b) => a.revision - b.revision,
+    );
     return sorted[sorted.length - 1];
   }
 }

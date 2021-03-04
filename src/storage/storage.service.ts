@@ -1,6 +1,11 @@
 import * as DocumentRepository from './dao/document.dao';
 
-import { Document, DocumentType, ECMDocument, Metadata } from './storage.model';
+import {
+  DocumentType,
+  ECMDocument,
+  ECMiDocument,
+  Metadata,
+} from './storage.model';
 import { Injectable } from '@nestjs/common';
 import { Readable } from 'stream';
 import { AnalyzerService } from '../integrity/analyzer.service';
@@ -15,7 +20,7 @@ export class StorageService {
     private readonly metadataRepository: MetadataRepository,
   ) {}
 
-  async upload(inFile: Document) {
+  async upload(inFile: ECMiDocument) {
     await this.integrityService.validate({ productId: 1, productName: 'name' });
     // await this.analyzerService.analyze(inFile);
     inFile.type = getDocumentType(inFile);
@@ -64,12 +69,12 @@ export class StorageService {
   }
 }
 
-function getDocumentType(doc: Document): DocumentType {
+function getDocumentType(doc: ECMiDocument): DocumentType {
   //TODO improve
   if (doc.type) {
     return doc.type;
   }
-  if (doc.metadata['xBL']) {
+  if (doc.metadata.get('xBL')) {
     return { type: 'BL', allowRevision: true };
   } else {
     return { type: 'INVOICE', allowRevision: false };
