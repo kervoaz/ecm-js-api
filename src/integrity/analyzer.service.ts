@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
 import { Injectable, Logger } from '@nestjs/common';
-import { Document, ECMiDocument } from '../storage/storage.model';
+import { ECMiDocument } from '../storage/storage.model';
 import { AnalyzerPDFService } from './analyzerPDF.service';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const parser = require('fast-xml-parser');

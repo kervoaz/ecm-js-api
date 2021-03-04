@@ -74,7 +74,7 @@ function getDocumentType(doc: ECMiDocument): DocumentType {
   if (doc.type) {
     return doc.type;
   }
-  if (doc.metadata.get('xBL')) {
+  if (doc.metadata['xBL']) {
     return { type: 'BL', allowRevision: true };
   } else {
     return { type: 'INVOICE', allowRevision: false };

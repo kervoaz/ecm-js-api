@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
-import { Document, ECMiDocument, Metadata } from '../storage/storage.model';
+import { ECMiDocument, Metadata } from '../storage/storage.model';
 import { ParserService } from './parser.service';
 import { replacer } from '../technical/Utils';
 
@@ -37,7 +37,7 @@ export class AnalyzerPDFService {
 }
 
 function parseLaraPdfBookmark(laraBookmark: string): Metadata {
-  const metaMap = new Map<string, string>();
+  const metaMap = {};
   if (!laraBookmark) {
     throw new Error(`Lara document MUST have bookmarks`);
   }
@@ -47,9 +47,9 @@ function parseLaraPdfBookmark(laraBookmark: string): Metadata {
     if (kv[1] === '""') {
       //skip TODO correct?
     } else if (kv[1] === undefined) {
-      metaMap.set('functionalKey', kv[0]);
+      metaMap['functionalKey'] = kv[0];
     } else {
-      metaMap.set(kv[0], kv[1]);
+      metaMap[kv[0]] = kv[1];
     }
   }
 

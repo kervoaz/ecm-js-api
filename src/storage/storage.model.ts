@@ -1,24 +1,18 @@
 import { xml2Json } from '../technical/Utils';
+import { MetadataValue } from 'aws-sdk/clients/s3';
 
 export class ECMiDocument {
   type?: DocumentType;
   revision?: number;
   metadata?: Metadata;
   createdAt: string;
+  private _fileContent: FileContent;
   updatedAt?: string;
   storageInformation?: StorageInformation;
   documentAnalyzis: { parsed: string };
-  constructor(
-    readonly id: string,
-    readonly fileContent: {
-      content: Buffer;
-      originalName: string;
-      mimeType: string;
-      compressed: boolean;
-    },
-  ) {
+  constructor(readonly id: string, fileContent: FileContent) {
     this.createdAt = new Date().toISOString();
-    this.fileContent = fileContent;
+    this._fileContent = fileContent;
   }
   toString(): string {
     return JSON.stringify(this);
@@ -27,7 +21,13 @@ export class ECMiDocument {
     this.documentAnalyzis.parsed = xml2Json(this.documentAnalyzis.parsed);
   }
   addMetadata(metaToAdd: Metadata) {
-    this.metadata = new Map([...this.metadata, ...metaToAdd]);
+    this.metadata = { ...this.metadata, ...metaToAdd };
+  }
+  set fileContent(fileContent: FileContent) {
+    this._fileContent = fileContent;
+  }
+  get fileContent():FileContent {
+    return this._fileContent;
   }
 }
 
@@ -46,7 +46,14 @@ export class ECMiDocument {
 //   };
 // }
 
-export type Metadata = Map<string, string>;
+export type Metadata = { [key: string]: MetadataValue };
+
+export interface FileContent {
+  content: Buffer;
+  originalName: string;
+  mimeType: string;
+  compressed: boolean;
+}
 
 export interface StorageInformation {
   bucket: string;

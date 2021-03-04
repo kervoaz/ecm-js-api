@@ -14,12 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage/storage.service';
-import {
-  Document,
-  ECMDocument,
-  ECMiDocument,
-  Metadata,
-} from './storage/storage.model';
+import { ECMDocument, ECMiDocument, Metadata } from './storage/storage.model';
 import { Response } from 'express';
 import { unzip, zip } from './technical/Utils';
 import { ParserService } from './integrity/parser.service';
@@ -79,7 +74,7 @@ export class AppController {
         compressed: false,
       });
       const res = await this.appService.main(document);
-    //  Logger.debug('res' + res.toString());
+      //  Logger.debug('res' + res.toString());
     } catch (e) {
       Logger.error(e.message);
     }
@@ -90,17 +85,13 @@ export class AppController {
   async uploadFile(@Param('id') id, @UploadedFile() file, @Body() metadata) {
     Logger.debug(`test env ${process.env.TEST}`);
     try {
-      const doc: Document = {
-        id,
-        metadata,
-        fileContent: {
-          content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
-          mimeType: file.mimetype,
-          originalName: file.originalname,
-          compressed: isCompress(metadata),
-        },
-        createdAt: new Date().toISOString(),
-      };
+      const doc = new ECMiDocument(id, {
+        content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
+        mimeType: file.mimetype,
+        originalName: file.originalname,
+        compressed: isCompress(metadata),
+      });
+      doc.addMetadata(metadata);
       return asView(await this.storageService.upload(doc));
     } catch (e) {
       throw new HttpException(

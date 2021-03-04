@@ -8,7 +8,7 @@ import {
   PutObjectRequest,
 } from 'aws-sdk/clients/s3';
 import { Logger } from '@nestjs/common';
-import { allowRevision, Document, ECMDocument } from '../storage.model';
+import { allowRevision, ECMDocument, ECMiDocument } from '../storage.model';
 
 const BUCKET_NAME = 'create-by-api'; //TODO parameter
 
@@ -46,7 +46,7 @@ async function createNewBucket(bucketName: string = BUCKET_NAME) {
   }
 }
 
-export async function save(inFile: Document): Promise<ECMDocument> {
+export async function save(inFile: ECMiDocument): Promise<ECMDocument> {
   const contentStorage = {
     bucket: BUCKET_NAME,
     objectKey: `${getBucketPrefix()}/${inFile.id}`,

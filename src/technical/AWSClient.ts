@@ -1,3 +1,6 @@
+import * as AWSS3 from 'aws-sdk/clients/s3';
+import { Metadata } from '../storage/storage.model';
+
 export const kinesisConstant = {
   STATE: {
     ACTIVE: 'ACTIVE',
