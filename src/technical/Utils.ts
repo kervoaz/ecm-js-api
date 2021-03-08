@@ -6,7 +6,7 @@ import * as zlib from 'zlib';
 import fs from 'fs';
 import { Readable } from 'stream';
 import { ECMiDocument } from '../storage/storage.model';
-
+import { v4 as uuid } from 'uuid';
 export function zip(input: string): Buffer {
   return zlib.deflateSync(Buffer.from(input, 'utf8'));
 }
@@ -31,7 +31,9 @@ export function fileNameToString(fileName: string) {
   const rawdata = fs.readFileSync(`${curDir}/test/resources/${fileName}`);
   return Buffer.from(rawdata).toString('utf8');
 }
-
+export function generateUUID(): string {
+  return uuid();
+}
 export function fileToFormData(fileContent: Buffer): Readable {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const FormDataNotTS = require('form-data');
@@ -72,16 +74,12 @@ export function xml2Json(xml: string): any {
     tagValueProcessor: (val, tagName) => he.decode(val), //default is a=>a
     stopNodes: ['parse-me-as-string'],
   };
-  const jsonObj = parser.parse(
-    xml,
-    options,
-    true,
-  );
+  const jsonObj = parser.parse(xml, options, true);
   return jsonObj;
 }
 
 export function replacer(key, value) {
-  if(value instanceof Map) {
+  if (value instanceof Map) {
     return {
       dataType: 'Map',
       value: Array.from(value.entries()), // or with spread: value: [...value]
@@ -91,7 +89,7 @@ export function replacer(key, value) {
   }
 }
 export function reviver(key, value) {
-  if(typeof value === 'object' && value !== null) {
+  if (typeof value === 'object' && value !== null) {
     if (value.dataType === 'Map') {
       return new Map(value.value);
     }

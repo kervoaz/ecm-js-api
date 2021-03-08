@@ -14,17 +14,17 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage/storage.service';
-import { ECMDocument, ECMiDocument, Metadata } from './storage/storage.model';
+import { ECMiDocument, Metadata, Origin } from './storage/storage.model';
 import { Response } from 'express';
-import { unzip, zip } from './technical/Utils';
-import { ParserService } from './integrity/parser.service';
+import { generateUUID, unzip, zip } from './technical/Utils';
+import { ContentAnalyzerService } from './integrity/content-analyzer.service';
 import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly storageService: StorageService,
-    private readonly parserService: ParserService,
+    private readonly parserService: ContentAnalyzerService,
     private readonly appService: AppService,
   ) {}
 
@@ -56,7 +56,7 @@ export class AppController {
   async getDocumentById(
     @Param('id') id,
     @Query() queryString,
-  ): Promise<Array<ECMDocument>> {
+  ) {
     console.log(JSON.stringify(id));
     console.log(JSON.stringify(queryString));
     return allAsView(
@@ -74,25 +74,41 @@ export class AppController {
         compressed: false,
       });
       const res = await this.appService.main(document);
-      //  Logger.debug('res' + res.toString());
+      return res.asView(false);
     } catch (e) {
       Logger.error(e.message);
     }
   }
 
-  @Post('documents/:id')
+  @Post('documents')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@Param('id') id, @UploadedFile() file, @Body() metadata) {
-    Logger.debug(`test env ${process.env.TEST}`);
+  async uploadFile(@UploadedFile() file, @Body() metadata) {
+    return this.genericUpload(file, metadata, Origin.API);
+  }
+
+  @Post('laradocuments')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadLaraFile(@UploadedFile() file, @Body() metadata) {
+    return this.genericUpload(file, metadata, Origin.LARA);
+  }
+
+  async genericUpload(file, metadata, origin) {
     try {
-      const doc = new ECMiDocument(id, {
+      const doc = new ECMiDocument(generateUUID(), {
         content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
         mimeType: file.mimetype,
         originalName: file.originalname,
         compressed: isCompress(metadata),
       });
       doc.addMetadata(metadata);
-      return asView(await this.storageService.upload(doc));
+      doc.origin = origin;
+      const preparedDoc = await this.appService.main(doc);
+      if (!preparedDoc.validation.isValid) {
+        throw new Error(
+          `Document is not valid ${preparedDoc.validation.errors}`,
+        );
+      }
+      return (await this.storageService.upload(preparedDoc)).asView(false);
     } catch (e) {
       throw new HttpException(
         {
@@ -113,20 +129,10 @@ function isCompress(metadata: Metadata): boolean {
   }
 }
 
-function asView(ecmDocument: ECMDocument) {
-  if (!ecmDocument) {
-    throw new HttpException({}, HttpStatus.NO_CONTENT);
-  }
-  if (ecmDocument.fileContent) {
-    delete ecmDocument.fileContent.content;
-  }
-  delete ecmDocument.contentStorage;
-  return ecmDocument;
-}
 
-function allAsView(ecmDocuments: Array<ECMDocument>) {
+function allAsView(ecmDocuments: Array<ECMiDocument>) {
   if (ecmDocuments.length === 0) {
     throw new HttpException({}, HttpStatus.NO_CONTENT);
   }
-  return ecmDocuments.map((x) => asView(x));
+  return ecmDocuments.map((x) => x.asView(false));
 }

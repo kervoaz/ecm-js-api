@@ -9,7 +9,7 @@ const he = require('he');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const jp = require('jsonpath');
 @Injectable()
-export class AnalyzerService {
+export class MimeRouterService {
   constructor(private readonly analyzerPDFService: AnalyzerPDFService) {}
 
   async analyze(document: ECMiDocument) {

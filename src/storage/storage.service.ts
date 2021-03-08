@@ -1,30 +1,22 @@
-import * as DocumentRepository from './dao/document.dao';
-
-import {
-  DocumentType,
-  ECMDocument,
-  ECMiDocument,
-  Metadata,
-} from './storage.model';
+import { DocumentType, ECMiDocument, Metadata } from './storage.model';
 import { Injectable } from '@nestjs/common';
 import { Readable } from 'stream';
-import { AnalyzerService } from '../integrity/analyzer.service';
+import { MimeRouterService } from '../integrity/mime-router.service';
 import { MetadataRepository } from './dao/metadata.dao';
 import { ValidationService } from '../integrity/validation.service';
+import { DocumentRepository } from './dao/document.dao';
 
 @Injectable()
 export class StorageService {
   constructor(
-    private readonly analyzerService: AnalyzerService,
+    private readonly analyzerService: MimeRouterService,
     private readonly integrityService: ValidationService,
     private readonly metadataRepository: MetadataRepository,
+    private readonly documentRepository: DocumentRepository,
   ) {}
 
   async upload(inFile: ECMiDocument) {
-    await this.integrityService.validate({ productId: 1, productName: 'name' });
-    // await this.analyzerService.analyze(inFile);
-    inFile.type = getDocumentType(inFile);
-    let ecmFile: ECMDocument = await DocumentRepository.save(inFile);
+    let ecmFile: ECMiDocument = await this.documentRepository.save(inFile);
     ecmFile = await this.metadataRepository.save(ecmFile);
     return ecmFile;
   }
@@ -32,7 +24,7 @@ export class StorageService {
   async getDocumentsById(
     id: string,
     filters: Metadata,
-  ): Promise<Array<ECMDocument>> {
+  ): Promise<Array<ECMiDocument>> {
     let ecmFile;
     if (filters['revision']) {
       ecmFile = [
@@ -47,7 +39,7 @@ export class StorageService {
   async getDocumentContent(
     id: string,
     filters: Metadata,
-  ): Promise<ECMDocument> {
+  ): Promise<ECMiDocument> {
     let ecmFile;
     if (filters['revision']) {
       ecmFile = await this.metadataRepository.get(
@@ -57,7 +49,7 @@ export class StorageService {
     } else {
       ecmFile = await this.metadataRepository.getLastRevision(id);
     }
-    ecmFile = await DocumentRepository.get(ecmFile);
+    ecmFile = await this.documentRepository.get(ecmFile);
     return ecmFile;
   }
 
@@ -66,17 +58,5 @@ export class StorageService {
     stream.push(buffer);
     stream.push(null);
     return stream;
-  }
-}
-
-function getDocumentType(doc: ECMiDocument): DocumentType {
-  //TODO improve
-  if (doc.type) {
-    return doc.type;
-  }
-  if (doc.metadata['xBL']) {
-    return { type: 'BL', allowRevision: true };
-  } else {
-    return { type: 'INVOICE', allowRevision: false };
   }
 }

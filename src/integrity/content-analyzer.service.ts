@@ -7,10 +7,10 @@ const FormDataNotTS = require('form-data');
 const Readable = require('stream').Readable;
 
 @Injectable()
-export class ParserService {
+export class ContentAnalyzerService {
   constructor(private httpService: HttpService) {}
 
-  async parse(document: ECMiDocument): Promise<AxiosResponse> {
+  async extract(document: ECMiDocument): Promise<AxiosResponse> {
     const formData = new FormDataNotTS();
     formData.append('file', bufferToStream(document.fileContent.content));
     const config: AxiosRequestConfig = {

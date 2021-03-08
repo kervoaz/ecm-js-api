@@ -1,4 +1,4 @@
-import { ParserService } from './parser.service';
+import { ContentAnalyzerService } from './content-analyzer.service';
 
 import * as fs from 'fs';
 import { HttpModule, HttpService, Logger } from '@nestjs/common';
@@ -13,13 +13,13 @@ describe('parse file', async () => {
   const filepath = '../test/';
   const fullname = path.resolve(filepath, filename);
   const file_stream = fs.createReadStream(fullname);
-  const parser = new ParserService(new HttpService());
+  const parser = new ContentAnalyzerService(new HttpService());
   const doc = new ECMiDocument('testId', {
     compressed: false,
     content: undefined,
     mimeType: '',
     originalName: '',
   });
-  const res = await parser.parse(doc);
+  const res = await parser.extract(doc);
   Logger.debug('ici' + res.data);
 });
