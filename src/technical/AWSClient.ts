@@ -52,3 +52,5 @@ export const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 export const lambda = new AWS.Lambda({ apiVersion: '2015-03-31' });
 
 export const textract = new AWS.Textract({ apiVersion: '2018-06-27' });
+
+export const ssm = new AWS.SSM({ apiVersion: '2014-11-06' });

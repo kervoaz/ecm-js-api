@@ -2,6 +2,8 @@ import { PDFDocument } from 'pdf-lib';
 import { Injectable, Logger } from '@nestjs/common';
 import { ECMiDocument } from '../storage/storage.model';
 import { AnalyzerPDFService } from './analyzerPDF.service';
+import { ElasticClient } from '../technical/ElasticSearchClient';
+import { generateUUID } from '../technical/Utils';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const parser = require('fast-xml-parser');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -38,16 +40,25 @@ export class MimeRouterService {
       };
       try {
         const jsonObj = parser.parse(
-          document.fileContent.content.toString('utf8'),
+          document.documentAnalyzis.parsed,
           options,
           true,
         );
-        const filtered: Array<any> = jp.query(jsonObj, '$..tbody');
-        filtered.forEach((x) => {
-          if (JSON.stringify(x).includes('MBD_X4_BPTU_ETS_0074')) {
-            Logger.debug(JSON.stringify(x['tr']));
+        const filtereds: Array<any> = jp.query(jsonObj, '$..tbody');
+        for (const filtered of filtereds) {
+          if (
+            JSON.stringify(filtered).includes('Covers') &&
+            JSON.stringify(filtered).includes('Verification')
+          ) {
+            Logger.debug(JSON.stringify(filtered)); //JSON.stringify(x['tr']));
+            const elasticClient = new ElasticClient();
+            await elasticClient.build().update({
+              index: 'zouCompany',
+              id: generateUUID(),
+              body: JSON.stringify(filtered),
+            });
           }
-        });
+        }
         //filtered = jp.query(filtered, '$..tr');
         //filtered = jp.query(filtered, '$..td');
         // Logger.debug(`${JSON.stringify(filtered)}`);

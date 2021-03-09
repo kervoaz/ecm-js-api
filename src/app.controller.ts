@@ -53,10 +53,7 @@ export class AppController {
   }
 
   @Get('documents/:id')
-  async getDocumentById(
-    @Param('id') id,
-    @Query() queryString,
-  ) {
+  async getDocumentById(@Param('id') id, @Query() queryString) {
     console.log(JSON.stringify(id));
     console.log(JSON.stringify(queryString));
     return allAsView(
@@ -80,13 +77,13 @@ export class AppController {
     }
   }
 
-  @Post('documents')
+  @Post('documents/document')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file, @Body() metadata) {
     return this.genericUpload(file, metadata, Origin.API);
   }
 
-  @Post('laradocuments')
+  @Post('documents/laradocuments')
   @UseInterceptors(FileInterceptor('file'))
   async uploadLaraFile(@UploadedFile() file, @Body() metadata) {
     return this.genericUpload(file, metadata, Origin.LARA);
@@ -128,7 +125,6 @@ function isCompress(metadata: Metadata): boolean {
     return false;
   }
 }
-
 
 function allAsView(ecmDocuments: Array<ECMiDocument>) {
   if (ecmDocuments.length === 0) {

@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
-import { ECMiDocument, FunctionalType, Metadata, Origin } from '../storage/storage.model';
+import {
+  ECMiDocument,
+  FunctionalType,
+  Metadata,
+  Origin,
+} from '../storage/storage.model';
 import { ContentAnalyzerService } from './content-analyzer.service';
 import { replacer } from '../technical/Utils';
 

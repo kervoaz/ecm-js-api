@@ -129,7 +129,7 @@ export interface StorageInformation {
 //    contentStorage: StorageInformation;
 // }
 
-export enum FunctionalType{
+export enum FunctionalType {
   BL = 'BL',
   INVOICE = 'INVOICE',
   OTHER = 'OTHER',

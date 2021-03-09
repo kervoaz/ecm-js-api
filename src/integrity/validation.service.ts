@@ -5,7 +5,6 @@ import { InvoiceSchema } from '../../resources/InvoiceSchema';
 import { BLSchema } from '../../resources/BLSchema';
 import { OtherSchema } from '../../resources/OtherSchema';
 
-
 @Injectable()
 export class ValidationService {
   validate(
