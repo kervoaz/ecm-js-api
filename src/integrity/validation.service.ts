@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
-import { Metadata } from '../storage/storage.model';
+import { FunctionalType, Metadata } from '../storage/storage.model';
 import { InvoiceSchema } from '../../resources/InvoiceSchema';
 import { BLSchema } from '../../resources/BLSchema';
 import { OtherSchema } from '../../resources/OtherSchema';
@@ -14,14 +14,14 @@ export class ValidationService {
     let validator;
     let documentType;
     switch (data['dDocType']) {
-      case 'INVOICE':
+      case FunctionalType.INVOICE:
         validator = ajv.compile(InvoiceSchema);
         documentType = {
           functionalType: data['dDocType'],
           allowRevision: false,
         };
         break;
-      case 'BL':
+      case FunctionalType.BL:
         validator = ajv.compile(BLSchema);
         documentType = {
           functionalType: data['dDocType'],

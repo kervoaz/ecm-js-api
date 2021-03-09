@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
 import { Injectable, Logger } from '@nestjs/common';
-import { ECMiDocument } from '../storage/storage.model';
+import { ECMiDocument, FunctionalType } from '../storage/storage.model';
 import { AnalyzerPDFService } from './analyzerPDF.service';
 import { ElasticClient } from '../technical/ElasticSearchClient';
 import { generateUUID } from '../technical/Utils';
@@ -18,6 +18,7 @@ export class MimeRouterService {
     if (document.fileContent.mimeType.includes('pdf')) {
       await this.analyzerPDFService.analyze(document);
     } else {
+      document.addMetadata({ dDocType: FunctionalType.OTHER });
       Logger.warn(`not a pdf`);
       const options = {
         attributeNamePrefix: '@_',
@@ -50,21 +51,25 @@ export class MimeRouterService {
             JSON.stringify(filtered).includes('Covers') &&
             JSON.stringify(filtered).includes('Verification')
           ) {
-            Logger.debug(JSON.stringify(filtered)); //JSON.stringify(x['tr']));
+            let newFiltered = jp.query(filtered, '$..tr');
+            newFiltered = jp.query(newFiltered, '$..td');
+            newFiltered = jp.query(newFiltered, '$..p');
             const elasticClient = new ElasticClient();
-            await elasticClient.build().update({
-              index: 'zouCompany',
+            await elasticClient.build().index({
+              index: 'zoucompany',
               id: generateUUID(),
-              body: JSON.stringify(filtered),
+              body: { header: toIndexable(newFiltered) },
             });
           }
         }
-        //filtered = jp.query(filtered, '$..tr');
-        //filtered = jp.query(filtered, '$..td');
-        // Logger.debug(`${JSON.stringify(filtered)}`);
       } catch (error) {
         Logger.error(`${error.message}`);
       }
     }
   }
+}
+function toIndexable(arrayOfAny: any[]) {
+  return arrayOfAny.map((x) => {
+    return typeof x !== 'string' ? JSON.stringify(x) : x;
+  });
 }
