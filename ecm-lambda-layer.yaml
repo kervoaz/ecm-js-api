@@ -3,18 +3,18 @@ Transform: AWS::Serverless-2016-10-31
 Description: ECM as Lambda.
 
 Resources:
-  ECMNestJSFLayer:
+  DOCSTORENodeJSLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
       CompatibleRuntimes:
         - nodejs12.x
-      ContentUri: /dist
-      Description: nestlayer
-      LayerName: NestLayer
+      ContentUri: dist
+      Description: nodejs layer for docstore
+      LayerName: DocStoreLayer
 
-#Outputs:
-#  LambdaECMNestApi:
-#    Description: URL for application
-#    Value: !Sub '${NestLayer}'
-#    Export:
-#      Name: LambdaNestLayer
+Outputs:
+  DOCSTORELayer:
+    Description: layer arn
+    Value: !Ref DOCSTORENodeJSLayer
+    Export:
+      Name: !Sub "${AWS::StackName}-DocStoreLayer"

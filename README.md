@@ -30,6 +30,7 @@
 
 ```bash
 $ npm install
+$ gulp buildlayer
 ```
 
 ## Running the app
