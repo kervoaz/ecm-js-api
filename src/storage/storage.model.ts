@@ -22,7 +22,9 @@ export class ECMiDocument {
     return JSON.stringify(this);
   }
   asJson() {
-    this.documentAnalyzis.parsed = xml2Json(this.documentAnalyzis.parsed);
+    this.documentAnalyzis.parsed = JSON.stringify(
+      xml2Json(this.documentAnalyzis.parsed),
+    );
   }
   addMetadata(metaToAdd: Metadata) {
     this.metadata = { ...this.metadata, ...metaToAdd };

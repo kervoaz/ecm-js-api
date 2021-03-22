@@ -2,9 +2,9 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "ZouLayerBySam"
+stack_name = "AppBySam"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-18e193ohkrswp"
-s3_prefix = "ZouLayerBySam"
+s3_prefix = "AppBySam"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "FoundationStackName=\"ZouLayerBySam\""

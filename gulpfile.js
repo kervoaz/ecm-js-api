@@ -63,3 +63,13 @@ function postLayer() {
 }
 
 exports.buildLayer = gulp.series(preLayer, layer, postLayer);
+
+exports.buildApp = buildApp;
+
+function buildApp() {
+  return gulp
+    .src('./dist/app/**')
+    .pipe(chmod(perm, true))
+    .pipe(zip('app-lambda.zip'))
+    .pipe(gulp.dest('dist'));
+}

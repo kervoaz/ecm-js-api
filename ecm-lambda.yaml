@@ -12,12 +12,12 @@ Resources:
     Properties:
       Handler: src/lambda-entry-point.handler
       Runtime: nodejs12.x
-      CodeUri: deploy/nest-lambda.zip
+      CodeUri: dist/app-lambda.zip
       MemorySize: 1512
       Timeout: 60
       Layers:
-        Value:
-          Fn::ImportValue: !Sub ${FoundationStackName}-DOCSTORELayer
+        - Fn::ImportValue:
+            !Sub ${FoundationStackName}-DocStoreLayer
       Events:
         GetResource:
           Type: Api
@@ -43,4 +43,4 @@ Outputs:
     Description: URL for application
     Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/documents'
     Export:
-      Name: LambdaNestApi
+      Name: DocStoreApi

@@ -8,7 +8,7 @@ Resources:
     Properties:
       CompatibleRuntimes:
         - nodejs12.x
-      ContentUri: dist
+      ContentUri: dist/layer-lambda.zip
       Description: nodejs layer for docstore
       LayerName: DocStoreLayer
 
