@@ -11,7 +11,7 @@ let cachedServer: Handler;
 async function bootstrap() {
   if (!cachedServer) {
     const pathToModule = require.resolve('express');
-    console.log('ici'+pathToModule);
+    console.log('ici' + pathToModule);
     const expressApp = express();
     const nestApp = await NestFactory.create(
       AppModule,

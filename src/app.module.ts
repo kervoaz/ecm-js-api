@@ -9,14 +9,9 @@ import { ContentAnalyzerService } from './integrity/content-analyzer.service';
 import { AnalyzerPDFService } from './integrity/analyzerPDF.service';
 import { AppService } from './app.service';
 import { DocumentRepository } from './storage/dao/document.dao';
-import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ envFilePath: 'dev.env' }),
-    HttpModule,
-    AuthModule,
-  ],
+  imports: [ConfigModule.forRoot({ envFilePath: 'dev.env' }), HttpModule],
   controllers: [AppController],
   providers: [
     StorageService,
