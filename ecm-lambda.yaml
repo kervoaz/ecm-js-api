@@ -15,6 +15,11 @@ Resources:
       CodeUri: dist/app-lambda.zip
       MemorySize: 1512
       Timeout: 60
+      Environment:
+        Variables:
+          DOCUMENTS_TABLE_NAME: documents-store-dev
+          BUCKET_NAME: documents-store-181929501415-dev
+          USE_DISCOVERED_ID: true
       Layers:
         - Fn::ImportValue:
             !Sub ${FoundationStackName}-DocStoreLayer
@@ -38,6 +43,18 @@ Resources:
                 - 'logs:PutLogEvents'
               Resource:
                 - '*'
+            - Effect: "Allow"
+              Action:
+                - 's3:*Object'
+                - 's3:ListBucket'
+                - 's3:*'
+              Resource:
+                - 'arn:aws:s3:::documents-store-181929501415-dev/*'
+            - Effect: "Allow"
+              Action:
+                - 'dynamodb:*'
+              Resource:
+                - 'arn:aws:dynamodb:*:*:table/documents-store-dev'
 Outputs:
   LambdaECMNestApi:
     Description: URL for application

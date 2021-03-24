@@ -13,9 +13,10 @@ export class AppService {
   ) {}
 
   async main(document: ECMiDocument): Promise<ECMiDocument> {
-    // try {
-    const xml = await this.contentAnalyzerService.extract(document);
-    document.documentAnalyzis = { parsed: xml.data };
+    if (process.env.CONTENT_ANALYSE) {
+      const xml = await this.contentAnalyzerService.extract(document);
+      document.documentAnalyzis = { parsed: xml.data };
+    }
     await this.mimeRouterService.analyze(document);
     const validation = this.validationService.validate(document.metadata);
     document.validation = {
@@ -23,17 +24,6 @@ export class AppService {
       errors: validation.errors,
     };
     document.type = validation.documentType;
-    // } catch (e) {
-    //   Logger.error(e);
-    //   if (document.documentAnalyzis) {
-    //     document.documentAnalyzis.error = `${e.message}`;
-    //   } else {
-    //     document.documentAnalyzis = {
-    //       parsed: undefined,
-    //       error: `${e.message}`,
-    //     };
-    //   }
-    // }
     return document;
   }
 }
