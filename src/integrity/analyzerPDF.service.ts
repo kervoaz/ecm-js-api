@@ -24,28 +24,27 @@ export class AnalyzerPDFService {
       document.addMetadata(this.parseMeta4Lara(pdfDoc.getAuthor()));
       document.addMetadata(this.parseMeta4Lara(pdfDoc.getSubject()));
       document.addMetadata(this.parseMeta4Lara(pdfDoc.getKeywords()));
-      console.log('Producer:', pdfDoc.getProducer());
-      console.log('Creation Date:', pdfDoc.getCreationDate());
-      console.log('Modification Date:', pdfDoc.getModificationDate());
       console.log('nb pages', pdfDoc.getPageCount());
       document.asJson();
-      const outlines: { li: Array<string> } =
-        document.documentAnalyzis.parsed['html']['body']['ul'];
-      let bookmarks;
-      if (!(outlines['li'] instanceof Array)) {
-        bookmarks = [outlines['li']];
-      } else {
-        bookmarks = outlines['li'];
-      }
-      if (bookmarks.length > 1) {
-        throw new Error(
-          `This file is a multi document. Split on bookmark/outline not yet implemented`,
-        );
-      }
-      for (const bookmark of bookmarks) {
-        const meta = this.parseMeta4Lara(bookmark);
-        document.addMetadata(meta);
-        Logger.debug(JSON.stringify(meta, replacer));
+      if(document.documentAnalyzis && document.documentAnalyzis.parsed) {
+        const outlines: { li: Array<string> } =
+          document.documentAnalyzis.parsed['html']['body']['ul'];
+        let bookmarks;
+        if (!(outlines['li'] instanceof Array)) {
+          bookmarks = [outlines['li']];
+        } else {
+          bookmarks = outlines['li'];
+        }
+        if (bookmarks.length > 1) {
+          throw new Error(
+            `This file is a multi document. Split on bookmark/outline not yet implemented`,
+          );
+        }
+        for (const bookmark of bookmarks) {
+          const meta = this.parseMeta4Lara(bookmark);
+          document.addMetadata(meta);
+          Logger.debug(JSON.stringify(meta, replacer));
+        }
       }
     } else {
       Logger.debug(`no additional metadata will be discovered from file`);

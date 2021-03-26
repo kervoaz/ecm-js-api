@@ -22,9 +22,11 @@ export class ECMiDocument {
     return JSON.stringify(this);
   }
   asJson() {
-    this.documentAnalyzis.parsed = JSON.stringify(
-      xml2Json(this.documentAnalyzis.parsed),
-    );
+    if (this.documentAnalyzis && this.documentAnalyzis.parsed) {
+      this.documentAnalyzis.parsed = JSON.stringify(
+        xml2Json(this.documentAnalyzis.parsed),
+      );
+    }
   }
   addMetadata(metaToAdd: Metadata) {
     this.metadata = { ...this.metadata, ...metaToAdd };
@@ -51,6 +53,7 @@ export class ECMiDocument {
   asView(withStorageInformation: boolean) {
     return asView(this, withStorageInformation);
   }
+
 }
 interface Dao {
   id: string;

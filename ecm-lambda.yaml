@@ -29,6 +29,7 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: any
+#            Auth:
       Policies:
         - Statement:
             - Effect: "Allow"
