@@ -53,7 +53,6 @@ export class ECMiDocument {
   asView(withStorageInformation: boolean) {
     return asView(this, withStorageInformation);
   }
-
 }
 interface Dao {
   id: string;

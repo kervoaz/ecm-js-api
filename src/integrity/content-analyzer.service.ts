@@ -6,6 +6,9 @@ const FormDataNotTS = require('form-data');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Readable = require('stream').Readable;
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const md5 = require('md5');
+
 @Injectable()
 export class ContentAnalyzerService {
   constructor(private httpService: HttpService) {}
@@ -26,8 +29,11 @@ export class ContentAnalyzerService {
     };
     return this.httpService.request(config).toPromise();
   }
-}
 
+  getId(input: string) {
+    return md5(input);
+  }
+}
 function bufferToStream(buffer) {
   const stream = new Readable();
   stream.push(buffer);

@@ -1,4 +1,4 @@
-import { DocumentType, ECMiDocument, Metadata } from './storage.model';
+import { ECMiDocument, Metadata } from './storage.model';
 import { Injectable } from '@nestjs/common';
 import { Readable } from 'stream';
 import { MimeRouterService } from '../integrity/mime-router.service';
@@ -46,8 +46,16 @@ export class StorageService {
         id,
         parseInt(filters['revision']),
       );
+      if (!ecmFile) {
+        throw new Error(
+          `File ${id} doesn't exist in the specified revision ${filters['revision']}`,
+        );
+      }
     } else {
       ecmFile = await this.metadataRepository.getLastRevision(id);
+      if (!ecmFile) {
+        throw new Error(`The file ${id} doesn't exist`);
+      }
     }
     ecmFile = await this.documentRepository.get(ecmFile);
     return ecmFile;

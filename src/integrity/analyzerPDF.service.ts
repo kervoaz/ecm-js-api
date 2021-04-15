@@ -26,7 +26,7 @@ export class AnalyzerPDFService {
       document.addMetadata(this.parseMeta4Lara(pdfDoc.getKeywords()));
       console.log('nb pages', pdfDoc.getPageCount());
       document.asJson();
-      if(document.documentAnalyzis && document.documentAnalyzis.parsed) {
+      if (document.documentAnalyzis && document.documentAnalyzis.parsed) {
         const outlines: { li: Array<string> } =
           document.documentAnalyzis.parsed['html']['body']['ul'];
         let bookmarks;
@@ -48,7 +48,9 @@ export class AnalyzerPDFService {
       }
     } else {
       Logger.debug(`no additional metadata will be discovered from file`);
-      document.addMetadata({ dDocType: FunctionalType.OTHER });
+      if (!document.metadata.dDocType) {
+        document.addMetadata({ dDocType: FunctionalType.OTHER });
+      }
     }
     /*   document.asJson();
        const elasticClient = new ElasticClient();

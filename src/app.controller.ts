@@ -16,7 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage/storage.service';
 import { ECMiDocument, Metadata, Origin } from './storage/storage.model';
 import { Response } from 'express';
-import { generateUUID, unzip, zip } from './technical/Utils';
+import { unzip, zip } from './technical/Utils';
 import { ContentAnalyzerService } from './integrity/content-analyzer.service';
 import { AppService } from './app.service';
 
@@ -34,22 +34,32 @@ export class AppController {
     @Query() queryString,
     @Res() res: Response,
   ) {
-    console.log(JSON.stringify(id));
-    console.log(JSON.stringify(queryString));
-    const ecmFile = await this.storageService.getDocumentContent(
-      id,
-      queryString,
-    );
-    const content = ecmFile.fileContent.compressed
-      ? unzip(ecmFile.fileContent.content)
-      : ecmFile.fileContent.content;
-    res.set({
-      'Content-Type': ecmFile.fileContent.mimeType,
-      'Content-Disposition': `attachment; filename=${ecmFile.fileContent.originalName}`,
-      'Content-Length': content.length,
-    });
-    this.storageService.getReadableStream(content).pipe(res);
-    console.log('done');
+    try {
+      console.log(JSON.stringify(id));
+      console.log(JSON.stringify(queryString));
+      const ecmFile = await this.storageService.getDocumentContent(
+        id,
+        queryString,
+      );
+      const content = ecmFile.fileContent.compressed
+        ? unzip(ecmFile.fileContent.content)
+        : ecmFile.fileContent.content;
+      res.set({
+        'Content-Type': ecmFile.fileContent.mimeType,
+        'Content-Disposition': `attachment; filename=${ecmFile.fileContent.originalName}`,
+        'Content-Length': content.length,
+      });
+      this.storageService.getReadableStream(content).pipe(res);
+      console.log('done');
+    } catch (e) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: e.message,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   @Get('documents/:id')
@@ -60,6 +70,7 @@ export class AppController {
       await this.storageService.getDocumentsById(id, queryString),
     );
   }
+
   @Post('document/parse')
   @UseInterceptors(FileInterceptor('file'))
   async parseFile(@UploadedFile() file) {
@@ -91,18 +102,23 @@ export class AppController {
 
   async genericUpload(file, metadata, origin) {
     try {
-      const doc = new ECMiDocument(generateUUID(), {
-        content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
-        mimeType: file.mimetype,
-        originalName: file.originalname,
-        compressed: isCompress(metadata),
-      });
+      const doc = new ECMiDocument(
+        this.parserService.getId(`${file.originalname}${file.mimetype}`),
+        {
+          content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
+          mimeType: file.mimetype,
+          originalName: file.originalname,
+          compressed: isCompress(metadata),
+        },
+      );
       doc.addMetadata(metadata);
       doc.origin = origin;
       const preparedDoc = await this.appService.main(doc);
       if (!preparedDoc.validation.isValid) {
         throw new Error(
-          `Document is not valid ${preparedDoc.validation.errors}`,
+          `Document is not valid ${JSON.stringify(
+            preparedDoc.validation.errors,
+          )}`,
         );
       }
       return (await this.storageService.upload(preparedDoc)).asView(false);
@@ -130,5 +146,8 @@ function allAsView(ecmDocuments: Array<ECMiDocument>) {
   if (ecmDocuments.length === 0) {
     throw new HttpException({}, HttpStatus.NO_CONTENT);
   }
-  return ecmDocuments.map((x) => x.asView(false));
+  for (const ecmDOc of ecmDocuments) {
+    ecmDOc.asView(false);
+  }
+  //return ecmDocuments.map((x) => x.asView(false));
 }

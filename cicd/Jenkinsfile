@@ -1,0 +1,52 @@
+node {
+    script {
+        timestamp = sh (script: 'date +%Y%m%d%H%M | xargs echo -n', returnStdout: true)
+    }
+}
+pipeline {
+	agent any
+	tools {
+		nodejs 'node_12.19'
+	}
+	stages {
+		stage('build int') {
+			when {
+				expression { return params.JEN_ENV == 'int'}
+			}
+			steps {
+				script {
+					pom = readJSON file: 'package.json'
+					buildVersion = "${pom.version}-${timestamp}"
+                    appVersion = "${JEN_APP_NAME}:${buildVersion}"
+					currentBuild.displayName = "${buildVersion}"
+                    currentBuild.description = "${appVersion}"
+				}
+				// BOOTSTRAP NAMESPACE
+                build job: 'INDUS/k8s-namespaces-bootstrap',
+                parameters: [
+                        string(name: 'JEN_K8S_NAMESPACE', value: "${JEN_KUBERNETES_NAMESPACE}-${JEN_ENV}")
+                ]
+
+                sh 'gulp run buildApp'
+                sh 'npm install --only=prod --no-progress'
+				zip zipFile: 'cicd/docker/app.zip', glob: 'node_modules/**, server/**, static/**, package.json'
+
+                script {
+					// BUILD & PUSH CMA CUSTOM IMAGE
+					withCredentials([string(credentialsId: '${JEN_HARBOR_CREDS}', variable: 'HARBOR_TOKEN')]) {
+					sh '''docker login ${JEN_HARBOR_REGISTRY} -u ${JEN_HARBOR_USR} -p ${HARBOR_TOKEN}'''
+					}
+					sh ("""docker build cicd/docker -t ${JEN_HARBOR_REGISTRY}/digital/${JEN_KUBERNETES_NAMESPACE}/${appVersion}""")
+                	sh ("""docker push ${JEN_HARBOR_REGISTRY}/digital/${JEN_KUBERNETES_NAMESPACE}/${appVersion}""")
+					sh 'docker image prune -a -f'
+				}
+
+				sh ("""sed -r -i 's/AppVersion/${buildVersion}/g' cicd/k8s/app/deployment.yaml""")
+                sh ("""sed -r -i 's/DarVersion/${buildVersion}/g' cicd/xl/deployit-manifest.xml""")
+				sh 'cat cicd/xl/deployit-manifest.xml'
+				xldCreatePackage artifactsPath: '', manifestPath: 'cicd/xl/deployit-manifest.xml', darPath: "${buildVersion}.dar"
+                xldPublishPackage serverCredentials: 'XLdeployCredentials', darPath: "${buildVersion}.dar"
+			}
+		}
+	}
+}
