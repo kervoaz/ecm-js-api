@@ -9,6 +9,9 @@ export const BLSchema = {
       description: 'Type of document',
       const: 'BL',
     },
+    allowRevision: {
+      const: 'true',
+    },
     xNATUR: {
       description: 'The nature of BL',
       type: 'string',

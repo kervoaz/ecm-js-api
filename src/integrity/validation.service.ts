@@ -25,7 +25,9 @@ export class ValidationService {
         validator = ajv.compile(BLSchema);
         documentType = {
           functionalType: data['dDocType'],
-          allowRevision: false,
+          allowRevision: this.asBoolean(
+            validator.schema.properties.allowRevision.const.toLowerCase(),
+          ),
         };
         break;
       default:
@@ -40,5 +42,9 @@ export class ValidationService {
     const valid = validator(data);
     if (!valid) console.log(validator.errors);
     return { isValid: valid, errors: validator.errors, documentType };
+  }
+
+  asBoolean(boolAsString: string) {
+    return boolAsString.toLowerCase() === 'true';
   }
 }
