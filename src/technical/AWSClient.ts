@@ -14,7 +14,7 @@ export const kinesisConstant = {
   REGION: 'eu-west-1',
   API_VERSION: '2013-12-02',
 };
-// Create the DynamoDB service object
+// Create the DynamoDB service-TODELETE object
 //AWS client is created with proxy and injected through global variable
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const AWS = require('aws-sdk');

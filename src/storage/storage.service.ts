@@ -1,7 +1,6 @@
-import { ECMiDocument, Metadata } from './storage.model';
+import { ECMDocument, Metadata } from './storage.model';
 import { Injectable } from '@nestjs/common';
 import { Readable } from 'stream';
-import { MimeRouterService } from '../integrity/mime-router.service';
 import { MetadataRepository } from './dao/metadata.dao';
 import { ValidationService } from '../integrity/validation.service';
 import { DocumentRepository } from './dao/document.dao';
@@ -9,14 +8,13 @@ import { DocumentRepository } from './dao/document.dao';
 @Injectable()
 export class StorageService {
   constructor(
-    private readonly analyzerService: MimeRouterService,
     private readonly integrityService: ValidationService,
     private readonly metadataRepository: MetadataRepository,
     private readonly documentRepository: DocumentRepository,
   ) {}
 
-  async upload(inFile: ECMiDocument) {
-    let ecmFile: ECMiDocument = await this.documentRepository.save(inFile);
+  async upload(inFile: ECMDocument): Promise<ECMDocument> {
+    let ecmFile: ECMDocument = await this.documentRepository.save(inFile);
     ecmFile = await this.metadataRepository.save(ecmFile);
     return ecmFile;
   }
@@ -24,7 +22,7 @@ export class StorageService {
   async getDocumentsById(
     id: string,
     filters: Metadata,
-  ): Promise<Array<ECMiDocument>> {
+  ): Promise<Array<ECMDocument>> {
     let ecmFile;
     if (filters['revision']) {
       ecmFile = [
@@ -39,7 +37,7 @@ export class StorageService {
   async getDocumentContent(
     id: string,
     filters: Metadata,
-  ): Promise<ECMiDocument> {
+  ): Promise<ECMDocument> {
     let ecmFile;
     if (filters['revision']) {
       ecmFile = await this.metadataRepository.get(

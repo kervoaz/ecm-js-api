@@ -1,7 +1,7 @@
 'use strict';
 
 import { docClient } from '../../technical/AWSClient';
-import { ECMiDocument } from '../storage.model';
+import { ECMDocument } from '../storage.model';
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
 import QueryInput = DocumentClient.QueryInput;
 import GetItemInput = DocumentClient.GetItemInput;
@@ -11,7 +11,7 @@ import { Injectable, Logger } from '@nestjs/common';
 export class MetadataRepository {
   private tableName: string = process.env.DOCUMENTS_TABLE_NAME;
 
-  async save(eFile: ECMiDocument): Promise<ECMiDocument> {
+  async save(eFile: ECMDocument): Promise<ECMDocument> {
     const previousStoredDocument = await this.getLastRevision(eFile.id);
     if (previousStoredDocument) {
       eFile.revision = previousStoredDocument.revision + 1;
@@ -39,7 +39,7 @@ export class MetadataRepository {
     }
   }
 
-  async list(id: string): Promise<Array<ECMiDocument>> {
+  async list(id: string): Promise<Array<ECMDocument>> {
     try {
       const param: QueryInput = {
         TableName: this.tableName,
@@ -48,7 +48,7 @@ export class MetadataRepository {
         ExpressionAttributeValues: { ':idToSearch': id },
       };
       Logger.debug(`[DBAccess] retrieve document for key:${id}`);
-      return <Array<ECMiDocument>>(
+      return <Array<ECMDocument>>(
         (<unknown>(await docClient.query(param).promise()).Items)
       );
     } catch (e) {
@@ -57,7 +57,7 @@ export class MetadataRepository {
     }
   }
 
-  async get(id: string, revision: number): Promise<ECMiDocument> {
+  async get(id: string, revision: number): Promise<ECMDocument> {
     try {
       const param: GetItemInput = {
         TableName: this.tableName,
@@ -65,14 +65,14 @@ export class MetadataRepository {
       };
       Logger.debug(`[DBAccess] retrieve document for key:${id} ${revision}`);
       const res = await docClient.get(param).promise();
-      return <ECMiDocument>(<unknown>res.Item);
+      return res.Item as ECMDocument;
     } catch (e) {
       Logger.error(`[ERR_DOC_GET] error getting document ${id} ${revision}`);
       throw e;
     }
   }
 
-  async getLastRevision(id: string): Promise<ECMiDocument> {
+  async getLastRevision(id: string): Promise<ECMDocument> {
     const sorted = (await this.list(id)).sort(
       (a, b) => a.revision - b.revision,
     );

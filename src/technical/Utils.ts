@@ -5,11 +5,11 @@
 import * as zlib from 'zlib';
 import fs from 'fs';
 import { Readable } from 'stream';
-import { ECMiDocument } from '../storage/storage.model';
 import { v4 as uuid } from 'uuid';
 export function zip(input: string): Buffer {
   return zlib.deflateSync(Buffer.from(input, 'utf8'));
 }
+import md5 from 'md5';
 
 /**
  * unzip a buffer to a string
@@ -34,11 +34,17 @@ export function fileNameToString(fileName: string) {
 export function generateUUID(): string {
   return uuid();
 }
+
+export function getHash(input: string) {
+  return md5(input);
+}
+
 export function fileToFormData(fileContent: Buffer): Readable {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const FormDataNotTS = require('form-data');
   const formData = new FormDataNotTS();
   const inStream = new Readable({
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     read() {},
   });
   inStream.push(fileContent);

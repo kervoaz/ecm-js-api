@@ -14,18 +14,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage/storage.service';
-import { ECMiDocument, Metadata, Origin } from './storage/storage.model';
+import { asView, ECMDocument, Metadata, Origin } from './storage/storage.model';
 import { Response } from 'express';
 import { unzip, zip } from './technical/Utils';
-import { ContentAnalyzerService } from './integrity/content-analyzer.service';
 import { AppService } from './app.service';
+import { IndexerService } from './indexer/indexer.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly storageService: StorageService,
-    private readonly parserService: ContentAnalyzerService,
     private readonly appService: AppService,
+    private readonly indexerService: IndexerService,
   ) {}
 
   @Get('documents/:id/content')
@@ -71,23 +71,6 @@ export class AppController {
     );
   }
 
-  @Post('document/parse')
-  @UseInterceptors(FileInterceptor('file'))
-  async parseFile(@UploadedFile() file) {
-    try {
-      const document = new ECMiDocument('zou', {
-        content: file.buffer,
-        mimeType: file.mimetype,
-        originalName: file.originalname,
-        compressed: false,
-      });
-      const res = await this.appService.main(document);
-      return res.asView(false);
-    } catch (e) {
-      Logger.error(e.message);
-    }
-  }
-
   @Post('documents/document')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file, @Body() metadata) {
@@ -102,15 +85,12 @@ export class AppController {
 
   async genericUpload(file, metadata, origin) {
     try {
-      const doc = new ECMiDocument(
-        this.parserService.getId(`${file.originalname}${file.mimetype}`),
-        {
-          content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
-          mimeType: file.mimetype,
-          originalName: file.originalname,
-          compressed: isCompress(metadata),
-        },
-      );
+      const doc = new ECMDocument(`${file.originalname}${file.mimetype}`, {
+        content: isCompress(metadata) ? zip(file.buffer) : file.buffer,
+        mimeType: file.mimetype,
+        originalName: file.originalname,
+        compressed: isCompress(metadata),
+      });
       doc.addMetadata(metadata);
       doc.origin = origin;
       const preparedDoc = await this.appService.main(doc);
@@ -121,7 +101,9 @@ export class AppController {
           )}`,
         );
       }
-      return (await this.storageService.upload(preparedDoc)).asView(false);
+      const finalDoc = await this.storageService.upload(preparedDoc);
+      await this.indexerService.indexDocument(doc);
+      return finalDoc.asView(false);
     } catch (e) {
       throw new HttpException(
         {
@@ -142,12 +124,9 @@ function isCompress(metadata: Metadata): boolean {
   }
 }
 
-function allAsView(ecmDocuments: Array<ECMiDocument>) {
+function allAsView(ecmDocuments: Array<ECMDocument>) {
   if (ecmDocuments.length === 0) {
     throw new HttpException({}, HttpStatus.NO_CONTENT);
   }
-  for (const ecmDOc of ecmDocuments) {
-    ecmDOc.asView(false);
-  }
-  //return ecmDocuments.map((x) => x.asView(false));
+  return ecmDocuments.map((x) => asView(x, false));
 }

@@ -1,10 +1,15 @@
 import { Client } from '@elastic/elasticsearch';
-import { getSecret } from './secretsManagerDao';
 import { CacheService } from './CacheService';
 import CacheType = CacheService.CacheType;
+import { Injectable } from '@nestjs/common';
+import { SecretManager } from './secretsManagerDao';
 
-const parameterStorePrefix = 'document-store';
+// const parameterStorePrefix = 'document-store';
+
+@Injectable()
 export class ElasticClient {
+  constructor(private readonly secretManager: SecretManager) {}
+  private parameterStorePrefix = `/papi/${process.env.ENV}`;
   private user: string;
   private password: string;
   private client: Client;
@@ -17,13 +22,15 @@ export class ElasticClient {
     let elasticPassword;
     if (!elasticUser) {
       try {
-        elasticUser = await getSecret(`${parameterStorePrefix}/elastic/user`);
-        elasticPassword = await getSecret(
-          `${parameterStorePrefix}/elastic/password`,
+        elasticUser = await this.secretManager.getSecret(
+          `${this.parameterStorePrefix}/elastic/user`,
+        );
+        elasticPassword = await this.secretManager.getSecret(
+          `${this.parameterStorePrefix}/elastic/password`,
         );
       } catch (e) {
         throw new Error(
-          `User or password not configured for ${parameterStorePrefix}`,
+          `User or password not configured for ${this.parameterStorePrefix}/elastic/user`,
         );
       }
       await CacheService.put(CacheType.CREDENTIAL, 'elasticUser', elasticUser);

@@ -1,38 +1,29 @@
-import { xml2Json } from '../technical/Utils';
 import { MetadataValue } from 'aws-sdk/clients/s3';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { getHash } from '../technical/Utils';
+import { doc } from 'prettier';
 
-export class ECMiDocument {
+export class ECMDocument {
   type?: DocumentType;
   revision?: number;
-  idDiscovered: string;
   metadata?: Metadata;
   createdAt: string;
   origin: Origin;
   private _fileContent: FileContent;
+  private readonly _id: string;
   updatedAt?: string;
   contentStorage: StorageInformation;
-  documentAnalyzis: { parsed: string; error?: string };
   validation?: { isValid: boolean; errors?: any[] };
-  constructor(readonly _id: string, fileContent: FileContent) {
+  constructor(id: string, fileContent: FileContent) {
+    this._id = getHash(id);
     this.createdAt = new Date().toISOString();
     this._fileContent = fileContent;
   }
   toString(): string {
     return JSON.stringify(this);
   }
-  asJson() {
-    if (this.documentAnalyzis && this.documentAnalyzis.parsed) {
-      this.documentAnalyzis.parsed = JSON.stringify(
-        xml2Json(this.documentAnalyzis.parsed),
-      );
-    }
-  }
+
   addMetadata(metaToAdd: Metadata) {
     this.metadata = { ...this.metadata, ...metaToAdd };
-    if (this.metadata) {
-      this.idDiscovered = this.metadata['functionalKey'];
-    }
   }
   set fileContent(fileContent: FileContent) {
     this._fileContent = fileContent;
@@ -41,17 +32,16 @@ export class ECMiDocument {
     return this._fileContent;
   }
   get id(): string {
-    if (process.env.USE_DISCOVERED_ID) {
-      return this.idDiscovered ? this.idDiscovered : this._id;
-    } else {
-      return this._id;
-    }
+    return this._id;
   }
   asDao(): Dao {
     return asDao(this);
   }
   asView(withStorageInformation: boolean) {
     return asView(this, withStorageInformation);
+  }
+  asIndexable() {
+    return asIndexable(this);
   }
 }
 interface Dao {
@@ -64,7 +54,7 @@ interface Dao {
   type: any;
   contentStorage: any;
 }
-function asDao(document: ECMiDocument): Dao {
+function asDao(document: ECMDocument): Dao {
   return {
     id: document.id,
     revision: document.revision,
@@ -81,7 +71,7 @@ function asDao(document: ECMiDocument): Dao {
   };
 }
 
-function asView(document: ECMiDocument, withStorageInformation = false) {
+export function asView(document: ECMDocument, withStorageInformation = false) {
   return {
     id: document.id,
     revision: document.revision,
@@ -95,20 +85,24 @@ function asView(document: ECMiDocument, withStorageInformation = false) {
       : undefined,
   };
 }
-// export interface Document {
-//   id: string;
-//   type?: DocumentType;
-//   revision?: number;
-//   metadata?: Metadata;
-//   createdAt: string;
-//   updatedAt?: string;
-//   fileContent?: {
-//     content: Buffer;
-//     originalName: string;
-//     mimeType: string;
-//     compressed: boolean;
-//   };
-// }
+
+export function asIndexable(document: ECMDocument) {
+  return {
+    id: document.id,
+    createdAt: document.createdAt,
+    fileContent: {
+      mimeType: document.fileContent.mimeType,
+      originalName: document.fileContent.originalName,
+      compressed: document.fileContent.compressed,
+    },
+    metadata: document.metadata,
+    origin: document.origin,
+    validation: document.validation,
+    type: document.type,
+    contentStorage: document.contentStorage,
+    revision: document.revision,
+  };
+}
 
 export enum Origin {
   LARA = 'LARA',
@@ -154,6 +148,6 @@ export interface DocumentType {
 //   allowRevision: false;
 // }
 
-export function allowRevision(document: ECMiDocument) {
+export function allowRevision(document: ECMDocument) {
   return document.type.allowRevision;
 }

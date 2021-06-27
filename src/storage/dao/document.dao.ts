@@ -8,7 +8,7 @@ import {
   PutObjectRequest,
 } from 'aws-sdk/clients/s3';
 import { Injectable, Logger } from '@nestjs/common';
-import { allowRevision, ECMiDocument } from '../storage.model';
+import { allowRevision, ECMDocument } from '../storage.model';
 import { MetadataRepository } from './metadata.dao';
 
 @Injectable()
@@ -57,14 +57,14 @@ export class DocumentRepository {
     }
   }
 
-  async save(inFile: ECMiDocument): Promise<ECMiDocument> {
+  async save(inFile: ECMDocument): Promise<ECMDocument> {
     const contentStorage = {
       bucket: this.getBucketName(),
       objectKey: `${this.getBucketPrefix(inFile.type.functionalType)}/${
         inFile.id
       }`,
     };
-    const ecmDocument = inFile as ECMiDocument;
+    const ecmDocument = inFile as ECMDocument;
     ecmDocument.contentStorage = contentStorage;
     if (!allowRevision(ecmDocument)) {
       let storedDoc;
@@ -113,7 +113,7 @@ export class DocumentRepository {
     return ecmDocument;
   }
 
-  async get(ecmFile: ECMiDocument): Promise<ECMiDocument> {
+  async get(ecmFile: ECMDocument): Promise<ECMDocument> {
     const getObjectRequest: GetObjectRequest = {
       Bucket: ecmFile.contentStorage.bucket,
       Key: ecmFile.contentStorage.objectKey,
