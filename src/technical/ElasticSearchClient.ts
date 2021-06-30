@@ -19,7 +19,10 @@ export class ElasticClient {
       CacheType.CREDENTIAL,
       'elasticUser',
     );
-    let elasticPassword;
+    let elasticPassword = await CacheService.get(
+      CacheType.CREDENTIAL,
+      'elasticPassword',
+    );
     if (!elasticUser) {
       try {
         elasticUser = await this.secretManager.getSecret(

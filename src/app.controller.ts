@@ -93,7 +93,9 @@ export class AppController {
       });
       doc.addMetadata(metadata);
       doc.origin = origin;
+      Logger.debug(`validation start`);
       const preparedDoc = await this.appService.main(doc);
+      Logger.debug(`validation end`);
       if (!preparedDoc.validation.isValid) {
         throw new Error(
           `Document is not valid ${JSON.stringify(
@@ -101,8 +103,12 @@ export class AppController {
           )}`,
         );
       }
+      Logger.debug(`upload start`);
       const finalDoc = await this.storageService.upload(preparedDoc);
+      Logger.debug(`upload end`);
+      Logger.debug(`indexing start`);
       await this.indexerService.indexDocument(doc);
+      Logger.debug(`indexing end`);
       return finalDoc.asView(false);
     } catch (e) {
       throw new HttpException(
